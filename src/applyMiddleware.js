@@ -24,6 +24,7 @@ export default function applyMiddleware(...middlewares) {
     dispatch = compose(...chain)(store.dispatch);
 
     // 注意下面的store对象具有getState、 dispatch、 subscribe,replaceReducer等方法
+    // 因此下面dispatch已经覆盖了store原本的dispatch行为
     return {
       ...store,
       dispatch
