@@ -36,6 +36,8 @@ if (
   );
 }
 
+// 开发者处理异步action就是基于applyMiddleware方法来拦截store.dispatch的行为
+// 开发者编写自己的redux中间件，也需要遵循({getState,dispatch})=>next=>action这种编程形式
 export {
   createStore,
   combineReducers,
