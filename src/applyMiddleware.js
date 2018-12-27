@@ -20,7 +20,9 @@ export default function applyMiddleware(...middlewares) {
     // 根据下面定义，中间件函数接收的一个参数为{getState,dispatch}，然后接收next函数参数和action参数
     const chain = middlewares.map(middleware => middleware(middlewareAPI));
 
-    // 这个dispatch得到了增强
+    // 这个dispatch得到了增强，而store.dispatch表示最原始的只能接受普通action对象的dispatch函数。
+    // 注意中间件通过compose函数合成为“洋葱结构”，
+    // 而在接受action时，根据action的类别来剥洋葱操作
     dispatch = compose(...chain)(store.dispatch);
 
     // 注意下面的store对象具有getState、 dispatch、 subscribe,replaceReducer等方法
