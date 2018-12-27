@@ -1,5 +1,5 @@
 export default function warning(message) {
-  // 在浏览器环境下的console全局对象
+  // console对象由宿主执行环境确定
   if (typeof console !== "undefined" && typeof console.error === "function") {
     console.error(message);
   }

@@ -1,11 +1,18 @@
+// 用于将一个对象变成可被观察对象，只要该对象实现了key为$$observable的接口即可
+// 在RxJS、XStream库等使用
 import $$observable from "symbol-observable";
 
 import ActionTypes from "./utils/actionTypes";
 import isPlainObject from "./utils/isPlainObject";
 
-// preloadedState只能是对象，但是createStore函数还是给开发者提供了多种调用方式
+/**
+ * 根据参数创建store对象
+ * @param {*} reducer 真正处理状态更新的函数
+ * @param {*} preloadedState redux的初始状态
+ * @param {*} enhancer 中间件增强
+ */
 export default function createStore(reducer, preloadedState, enhancer) {
-  // 开发者两个参数的调用形式，则第二个参数自动转为enhancer
+  // 开发中两个参数的调用形式，则第二个参数自动转为enhancer
   if (typeof preloadedState === "function" && typeof enhancer === "undefined") {
     enhancer = preloadedState;
     preloadedState = undefined;
@@ -17,8 +24,12 @@ export default function createStore(reducer, preloadedState, enhancer) {
       throw new Error("Expected the enhancer to be a function.");
     }
 
-    // 先对createStore函数增强，然后再调用store生成函数
-    // 一般enhancer函数就是applyMiddleware函数，用于实现异步action动作
+    //  这个return才是整个函数的出口，其中enhancer等价于applyMiddleware(...middlewares)执行后的返回函数。其执行步骤如下
+    // （1）执行enhancer(createStore)，返回partial function
+    // （2）执行enhancer(createStore)(reducer, preloadedState)。
+    // 根据applyMiddleware函数的定义可知，会调用create(reducer,preloadedState)。因此会完整执行createStore函数体
+    // 执行createStore函数返回的dispatch、subscribe等都是普通形式的函数
+    // 在applyMiddleware定义中，普通的dispatch被中间件增强
     return enhancer(createStore)(reducer, preloadedState);
   }
 
@@ -31,6 +42,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
   let currentState = preloadedState;
   let currentListeners = [];
   let nextListeners = currentListeners;
+
+  // 对于一个应用来说，同时只能触发一个action
   let isDispatching = false;
 
   // 确保不会修改currentListeners监听函数数组
@@ -97,7 +110,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
   // store的dispatch方法
   function dispatch(action) {
-    // action要么是普通对象，要么需要中间件配合
+    // action要么是普通对象，要么需要中间件配合来旁路下面的流程
     if (!isPlainObject(action)) {
       throw new Error(
         "Actions must be plain objects. " +
@@ -141,7 +154,10 @@ export default function createStore(reducer, preloadedState, enhancer) {
     return action;
   }
 
-  // 在reducer中当action的type没有对应的处理器处理，则返回原来的state对象
+  /**
+   * 在应用实现异步reducer时，需要下面方法来触发state状态数的重构
+   * @param {*} nextReducer 需要被替换的reducer
+   */
   function replaceReducer(nextReducer) {
     if (typeof nextReducer !== "function") {
       throw new Error("Expected the nextReducer to be a function.");
@@ -164,6 +180,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
         }
 
         // 如果观察者对象具有next方法，则调用store的getState返回新的state对象
+        // 观察者对象具有next方法，其实就表明该对象可能是迭代器。在JS中迭代器越来越重视
         function observeState() {
           if (observer.next) {
             observer.next(getState());
@@ -183,9 +200,10 @@ export default function createStore(reducer, preloadedState, enhancer) {
     };
   }
 
-  // 在store对象创建后，调用下面代码初始化各个reducer的初始状态
+  // 在store对象创建后，调用下面代码初始化state状态树
   dispatch({ type: ActionTypes.INIT });
 
+  // 注意下面的dispatch、subscribe、getState等都只是普通形式的方法而已
   return {
     dispatch,
     subscribe,

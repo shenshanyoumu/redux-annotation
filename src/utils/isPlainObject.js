@@ -1,5 +1,4 @@
 // action默认为普通的object，因此需要这个utils方法
-
 export default function isPlainObject(obj) {
   if (typeof obj !== "object" || obj === null) {
     return false;

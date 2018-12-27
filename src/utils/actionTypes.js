@@ -1,4 +1,4 @@
-//  在初始化state的时候，redux会自动调用下面的action;
+// 在初始化state的时候，redux会自动调用下面的action;
 // 开发者不要显式调用下面的action类型
 const ActionTypes = {
   INIT:

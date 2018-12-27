@@ -2,7 +2,7 @@ import ActionTypes from "./utils/actionTypes";
 import warning from "./utils/warning";
 import isPlainObject from "./utils/isPlainObject";
 
-// 所有触发的action都必须经过reduce处理，不然抛出异常
+// 所有触发的action都必须经过reducer处理，不然抛出异常
 function getUndefinedStateErrorMessage(key, action) {
   const actionType = action && action.type;
   const actionDescription =
