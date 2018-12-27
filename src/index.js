@@ -1,12 +1,13 @@
-// store对象包含getState、dispatch和subscribe等方法
+// store对象包含getState、dispatch、subscribe和replaceReducer等方法
 import createStore from "./createStore";
 
-// 项目中不同模块的reducer需要合成到一个大的reducer，来应对store的state树
+// 项目中不同模块的reducer需要合成到一个大的reducer，来映射store的state树
 import combineReducers from "./combineReducers";
 
 // 将actionCreator函数与dispatch方法的绑定
 import bindActionCreators from "./bindActionCreators";
 
+// 用于增强store能力的函数，在dispatch触发action时通过中间件来拦截功能
 import applyMiddleware from "./applyMiddleware";
 
 // 函数列表的合成
