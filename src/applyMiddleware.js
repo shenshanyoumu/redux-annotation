@@ -11,7 +11,7 @@ export default function applyMiddleware(...middlewares) {
       );
     };
 
-    // 注意，下面lambda表达式中dispatch函数并没有明确指向，只有在真正调用的时候才会绑定
+    // 每个middleware函数接受的第一个参数({getState,dispatch})中dispatch应该为store.dispatch最原生的函数
     const middlewareAPI = {
       getState: store.getState,
       dispatch: (...args) => dispatch(...args)
