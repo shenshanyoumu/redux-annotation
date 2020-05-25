@@ -194,6 +194,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
         };
       },
 
+      // 实现$$observable接口
       [$$observable]() {
         return this;
       }

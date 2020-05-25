@@ -22,7 +22,7 @@ import __DO_NOT_USE__ActionTypes from "./utils/actionTypes";
 //测试函数，如果在非生产环境下经过代码压缩处理则函数名字发生变化
 function isCrushed() {}
 
-// 在前端开发中，生成版本和开发版本使用的第三方库代码是不一样的，这样做用于压缩打包大小和混淆源代码
+// isCrushed用于指示redux库是否被压缩，因为redux源码在生产环境下进行了压缩
 if (
   process.env.NODE_ENV !== "production" &&
   typeof isCrushed.name === "string" &&

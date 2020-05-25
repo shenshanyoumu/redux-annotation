@@ -1,5 +1,5 @@
 export default function warning(message) {
-  // console对象由宿主执行环境确定
+  // 注意console不是JS规范，而是宿主环境的实现
   if (typeof console !== "undefined" && typeof console.error === "function") {
     console.error(message);
   }
