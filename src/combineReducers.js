@@ -2,7 +2,8 @@ import ActionTypes from "./utils/actionTypes";
 import warning from "./utils/warning";
 import isPlainObject from "./utils/isPlainObject";
 
-// 所有触发的action都必须经过reducer处理，不然抛出异常
+// 在reducerh函数对象定义的键值对，表示针对特定actionType的处理
+// 如果actionType没有在reducer中存在对应的处理器，则报错
 function getUndefinedStateErrorMessage(key, action) {
   const actionType = action && action.type;
   const actionDescription =
@@ -51,7 +52,7 @@ function getUnexpectedStateShapeWarningMessage(
     );
   }
 
-  // 注意由于每个reducer都会产生一个局部state对象，因此为了区分，
+  // combinedReducers构造一颗全局树，而每个reducer相当于子树，
   // store的全局state利用combinedReducer函数的参数的key来区别
 
   // 如果局部state没有对应的reducer函数，并且该局部state在应用中正常需要
@@ -104,6 +105,8 @@ function assertReducerShape(reducers) {
         .substring(7)
         .split("")
         .join(".");
+
+
     if (typeof reducer(undefined, { type }) === "undefined") {
       throw new Error(
         `Reducer "${key}" returned undefined when probed with a random type. ` +
@@ -121,7 +124,8 @@ function assertReducerShape(reducers) {
 
 //  这是主要函数
 export default function combineReducers(reducers) {
-  // 获得所有reducer函数的key
+  
+  // 获得所有reducer函数对象的key
   const reducerKeys = Object.keys(reducers);
   const finalReducers = {};
   for (let i = 0; i < reducerKeys.length; i++) {

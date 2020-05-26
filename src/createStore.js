@@ -7,12 +7,12 @@ import isPlainObject from "./utils/isPlainObject";
 
 /**
  * 根据参数创建store对象
- * @param {*} reducer 真正处理状态更新的函数
- * @param {*} preloadedState redux的初始状态
- * @param {*} enhancer 中间件增强
+ * @param {*} reducer 真正处理状态更新的函数，由开发者定义
+ * @param {*} preloadedState redux的初始状态，由开发者定义
+ * @param {*} enhancer 中间件增强，用于处理异步action
  */
 export default function createStore(reducer, preloadedState, enhancer) {
-  // 开发中两个参数的调用形式，则第二个参数自动转为enhancer
+  // preloadedState默认为对象类型，如果是函数类型则一般是enhancer参数
   if (typeof preloadedState === "function" && typeof enhancer === "undefined") {
     enhancer = preloadedState;
     preloadedState = undefined;
@@ -46,7 +46,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   // 对于一个应用来说，同时只能触发一个action
   let isDispatching = false;
 
-  // 确保不会修改currentListeners监听函数数组
+  // 当指向同一个引用，则需要通过slice()生成新的监听器数组
   function ensureCanMutateNextListeners() {
     if (nextListeners === currentListeners) {
       nextListeners = currentListeners.slice();
@@ -83,7 +83,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
     let isSubscribed = true;
 
-    // 注意下面，新的listeners对象进行等修改不会影响currentListeners数组
+    // 创建两个listeners数组，nextListeners数组的push操作不影响currentListeners
     ensureCanMutateNextListeners();
     nextListeners.push(listener);
 
@@ -101,7 +101,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
       isSubscribed = false;
 
-      // 不会修改currentListeners数组
+      // 下面操作用于将订阅的监听器从事件数组中移除
       ensureCanMutateNextListeners();
       const index = nextListeners.indexOf(listener);
       nextListeners.splice(index, 1);
@@ -110,7 +110,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
 
   // store的dispatch方法
   function dispatch(action) {
-    // action要么是普通对象，要么需要中间件配合来旁路下面的流程
+    // 最终store.dispatch的action是一个普通对象，针对异步action
+    // 实际上是一种thunk方式来延迟下面的代码执行
     if (!isPlainObject(action)) {
       throw new Error(
         "Actions must be plain objects. " +
@@ -143,8 +144,10 @@ export default function createStore(reducer, preloadedState, enhancer) {
       isDispatching = false;
     }
 
-    // 注意下面，currentListeners被nextListeners赋值
-    // 在dispatch触发后，依次调用subscribe到state对象上的所有监听器
+    
+    // 当修改state后会执行一系列回调函数，这种机制给react-redux提供了接口
+    // 在react-redux库中修改了state后，通过执行监听函数来触发
+    // react的props更新渲染流程
     const listeners = (currentListeners = nextListeners);
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i];
@@ -155,7 +158,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   }
 
   /**
-   * 在应用实现异步reducer时，需要下面方法来触发state状态数的重构
+   * 在按需加载应用中，通过该方法实现对reducer的热替换
    * @param {*} nextReducer 需要被替换的reducer
    */
   function replaceReducer(nextReducer) {
@@ -172,6 +175,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
   function observable() {
     // 针对store的订阅行为，subscribe为函数
     const outerSubscribe = subscribe;
+    
     return {
       //参数为观察者，也即是监听函数
       subscribe(observer) {
@@ -201,7 +205,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     };
   }
 
-  // 在store对象创建后，调用下面代码初始化state状态树
+  // 在createStore函数体执行尾部调用实现redux初始化过程
   dispatch({ type: ActionTypes.INIT });
 
   // 注意下面的dispatch、subscribe、getState等都只是普通形式的方法而已
